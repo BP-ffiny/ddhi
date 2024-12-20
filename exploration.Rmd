@@ -1,0 +1,112 @@
+---
+title: "postfascism"
+author: "me"
+date: "2024-11-14"
+output: html_document
+---
+```{r}
+library(ggplot2)
+library(tidyverse)
+```
+```{r}
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+```
+
+```{r}
+dataset <- read.csv("C:/Users/pothb/OneDrive/Dokumentumok/school 2024/ideal tavern stories/metadata/csv_metadata_jstor.csv")
+dataset <- dataset %>% distinct(url, .keep_all = TRUE)
+dataset <- dataset %>% distinct(title, publicationYear, .keep_all = TRUE)
+
+
+```
+
+```{r}
+ library(data.table)
+setkey(setDT(dataset), key = 'isPartOf') 
+duplicated <- dataset[duplicated(dataset) |duplicated(dataset,fromLast=T)]
+```
+
+
+```{r}
+stats <- summarise(dataset, getmode(dataset$publicationYear), min(dataset$publicationYear), max(dataset$publicationYear), median(dataset$publicationYear))
+stats
+```
+```{r}
+ggplot(dataset, aes(x=dataset$isPartOf))+ geom_bar()
+
+freq_table <- table(dataset$isPartOf)
+
+# Find the string with the maximum frequency
+most_frequent_string <- names(which.max(freq_table))
+most_frequent_string
+```
+```{r}
+data2001 <- dataset[dataset$publicationYear == '2001', "title" ]
+data2001
+```
+```{r}
+data2023 <- dataset[dataset$publicationYear == '2023', "title" ]
+data2023
+```
+```{r}
+str <- table(dataset$isPartOf)
+str
+```
+
+
+```{r}
+ggplot(dataset, aes(x=isPartOf))+ geom_bar()
+```
+```{r}
+dataset_ebsco_articles <- read.csv("C:/Users/pothb/OneDrive/Dokumentumok/school 2024/ideal tavern stories/ebsco_articles.csv")
+#dataset_ebsco_books <- dataset_ebsco_books %>% distinct(url, .keep_all = TRUE)
+dataset_ebsco_articles <- dataset_ebsco_articles %>% distinct(Article.Title, Publication.Date, .keep_all = TRUE)
+ggplot(dataset_ebsco_articles, aes(x=Journal.Title))+ geom_bar()
+
+```
+
+
+
+```{r}
+dataset_ebsco_books <- read.csv("C:/Users/pothb/OneDrive/Dokumentumok/school 2024/ideal tavern stories/ebsco_books.csv")
+#dataset_ebsco_books <- dataset_ebsco_books %>% distinct(url, .keep_all = TRUE)
+dataset_ebsco_books <- dataset_ebsco_books %>% distinct(Article.Title, Publication.Date, .keep_all = TRUE)
+```
+
+```{r}
+dataset_proq = read.csv("C:/Users/pothb/OneDrive/Dokumentumok/school 2024/ideal tavern stories/proquest_articles.csv")
+#dataset_ebsco_books <- dataset_ebsco_books %>% distinct(url, .keep_all = TRUE)
+dataset_proq <- dataset_proq %>% distinct(Title, pubdate, .keep_all = TRUE)
+ggplot(dataset_proq, aes(x=pubtitle))+ geom_bar()
+```
+
+```{r}
+table(dataset_proq$pubtitle)
+```
+```{r}
+names(dataset_ebsco_articles)[ names(dataset_ebsco_articles)== 'Article.Title']<-'title'
+names(dataset_ebsco_articles)[ names(dataset_ebsco_articles)== 'Author']<-'creator'
+match <- merge(dataset,dataset_ebsco_articles, by = 'creator')
+```
+
+```{r}
+names(dataset_proq)[ names(dataset_proq)== 'Authors']<-'creator'
+names(dataset_proq)[ names(dataset_proq)== 'Title']<-'title'
+names(dataset_proq)[ names(dataset_proq)== 'year']<-'publicationYear'
+
+match2 <- merge(dataset,dataset_proq, by = c('title','publicationYear'))
+```
+
+```{r}
+names(dataset_ebsco_books)[ names(dataset_ebsco_books)== 'Article.Title']<-'title'
+names(dataset_ebsco_books)[ names(dataset_ebsco_books)== 'Author']<-'creator'
+names(dataset_ebsco_books)[ names(dataset_ebsco_books)== 'Publication.Date']<-'publicationYear'
+
+dataset_ebsco_books$publicationYear <- gsub("\\=", "", dataset_ebsco_books$publicationYear)
+
+match3 <- merge(dataset,dataset_ebsco_books, by = c('creator',"publicationYear"))
+```
+
